@@ -43,4 +43,4 @@ jobs:
         with:
           name: bindings-${{ matrix.target }}
           path: |
-            rust/target/release/liblightningcss_cs_bindings.*
+            **/liblightningcss_cs_bindings.*
