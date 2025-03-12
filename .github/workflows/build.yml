@@ -11,15 +11,15 @@ jobs:
           # Windows
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            # binary: lightningcss.exe
+            binary: lightningcss_cs_bindings.dll
           - os: windows-latest
             target: aarch64-pc-windows-msvc
-            # binary: lightningcss.exe
+            binary: lightningcss_cs_bindings.dll
           # Mac OS
           - os: macos-latest
             target: x86_64-apple-darwin
             # strip: strip -x # Must use -x on macOS. This produces larger results on linux.
-            # binary: lightningcss
+            binary: lightningcss_cs_bindings.dylib
 
     name: build-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
@@ -42,4 +42,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.target }}
-          path: rust
+          path: rust/target/${{ matrix.target }}/release/${{ matrix.binary }}
