@@ -39,6 +39,7 @@ jobs:
       #   if: ${{ matrix.strip }}
       #   run: ${{ matrix.strip }} *.node ${{ matrix.binary }}
       - run: ls -l
+        working-directory: rust
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
