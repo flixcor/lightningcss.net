@@ -19,7 +19,7 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             # strip: strip -x # Must use -x on macOS. This produces larger results on linux.
-            binary: lightningcss_cs_bindings.dylib
+            binary: liblightningcss_cs_bindings.dylib
 
     name: build-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
