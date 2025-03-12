@@ -1,0 +1,17 @@
+[package]
+authors = ["Devon Govett <devongovett@gmail.com>"]
+name = "lightningcss_cs_bindings"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+lightningcss = { version= "1.0.0-alpha.64", features = ["browserslist"] }
+parcel_sourcemap = { version = "2.1.1", features = ["json"] }
+browserslist-rs = { version = "0.17.0" }
+
+[build-dependencies]
+csbindgen = "1.9.3"
