@@ -1,4 +1,5 @@
 ﻿using CsBindgen;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace lightningcss
@@ -7,14 +8,14 @@ namespace lightningcss
 	{
 		public static Targets BrowserlistToTargets(ReadOnlySpan<byte> browserlist)
 		{
+			CssError[] errors = [];
 			unsafe
 			{
-				var cssErrorP = GetErrorPointer();
-				CsBindgen.Targets* targetsP = stackalloc CsBindgen.Targets[1];
-
 				fixed (byte* browserlistP = browserlist)
+				fixed (CssError* cssErrorP = errors)
 				{
-					NativeMethods.lightningcss_browserslist_to_targets(browserlistP, targetsP, cssErrorP);
+					CsBindgen.Targets* targetsP = stackalloc CsBindgen.Targets[1];
+					NativeMethods.lightningcss_browserslist_to_targets(browserlistP, targetsP, (CssError**)cssErrorP);
 					var source = targetsP[0];
 					return new()
 					{
@@ -34,14 +35,17 @@ namespace lightningcss
 
 		public static ToCssResult Transform(ReadOnlySpan<byte> source, ParseOptions parseOptions, TransformOptions transformOptions, ToCssOptions toCssOptions)
 		{
+			CssError[] errors = [];
+
 			unsafe
 			{
 				fixed (byte* sourcePointer = source)
+				fixed (CssError* cssErrorP = errors)
 				fixed (byte* fileNamePointer = parseOptions.Filename)
 				fixed (byte* patternPointer = parseOptions.CssModulesPattern)
+				fixed (byte** unusedSymbolsP = Fill(transformOptions.UnusedSymbols))
 				{
-					var cssError = GetErrorPointer();
-					var unusedSymbolsP = Fill(transformOptions.UnusedSymbols);
+					CssError** cssError = (CssError**)cssErrorP;
 
 					var wrapper = NativeMethods.lightningcss_stylesheet_parse(sourcePointer, (nuint)source.Length, new()
 					{
@@ -103,14 +107,6 @@ namespace lightningcss
 			}
 		}
 
-		private static unsafe CssError** GetErrorPointer()
-		{
-			CssError** cssErrorP = stackalloc CssError*[1];
-			CssError* first = stackalloc CssError[1];
-			cssErrorP[0] = first;
-			return cssErrorP;
-		}
-
 		private static byte[] ConvertToBytes(RawString rawString)
 		{
 			if (rawString.len == 0) return [];
@@ -138,9 +134,9 @@ namespace lightningcss
 			return result;
 		}
 
-		private static unsafe byte** Fill(ReadOnlySpan<byte[]> source)
+		private static unsafe byte*[] Fill(ReadOnlySpan<byte[]> source)
 		{
-			var result = stackalloc byte*[source.Length];
+			var result = new byte*[source.Length];
 			for (int i = 0; i < source.Length; i++)
 			{
 				fixed (byte* inner = source[i])
