@@ -1,0 +1,47 @@
+name: release
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            # binary: lightningcss.exe
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            # binary: lightningcss.exe
+          # Mac OS
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            # strip: strip -x # Must use -x on macOS. This produces larger results on linux.
+            # binary: lightningcss
+
+    name: build-${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build CLI
+        working-directory: rust
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+      # - name: Strip debug symbols # https://github.com/rust-lang/rust/issues/46034
+      #   if: ${{ matrix.strip }}
+      #   run: ${{ matrix.strip }} *.node ${{ matrix.binary }}
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: bindings-${{ matrix.target }}
+      #     path: |
+      #       *.node
+      #       ${{ matrix.binary }}
