@@ -39,10 +39,6 @@ jobs:
           - os:      ubuntu-latest
             target:  x86_64-unknown-linux-musl
             binary:  liblightningcss_cs_bindings.so
-          # FreeBSD
-          - os:      ubuntu-latest
-            target:  x86_64-unknown-freebsd
-            binary:  liblightningcss_cs_bindings.so
 
     name: build-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
