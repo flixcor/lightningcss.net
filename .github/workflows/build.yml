@@ -29,9 +29,11 @@ jobs:
           - os: 	ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
             binary: liblightningcss_cs_bindings.so
+            install: apt-get update && apt-get install aarch74-linux-musl-gcc
           - os: 	ubuntu-24.04-arm
             target: armv7-unknown-linux-gnueabihf
             binary: liblightningcss_cs_bindings.so
+            install: apt-get update && apt-get install arm-linux-gnueabihf-gcc
           - os: 	ubuntu-24.04-arm
             target: aarch64-unknown-linux-musl
             binary: liblightningcss_cs_bindings.so
@@ -48,6 +50,10 @@ jobs:
 
       - name: Setup rust target
         run: rustup target add ${{ matrix.target }}
+
+      - name: install linker
+        if: ${{ matrix.install }}
+        run: ${{ matrix.install }}
 
       - name: Build Rust
         working-directory: rust
