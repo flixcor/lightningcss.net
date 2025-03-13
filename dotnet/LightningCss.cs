@@ -33,50 +33,75 @@ namespace lightningcss
 			}
 		}
 
-		public static ToCssResult Transform(ReadOnlySpan<byte> source, ParseOptions parseOptions, TransformOptions transformOptions, ToCssOptions toCssOptions)
+		public static ToCssResult Transform(TransformOptions options)
 		{
 			CssError[] errors = [];
 
 			unsafe
 			{
-				fixed (byte* sourcePointer = source)
+				fixed (byte* sourcePointer = options.Code)
 				fixed (CssError* cssErrorP = errors)
-				fixed (byte* fileNamePointer = parseOptions.Filename)
-				fixed (byte* patternPointer = parseOptions.CssModulesPattern)
-				fixed (byte** unusedSymbolsP = Fill(transformOptions.UnusedSymbols))
+				fixed (byte* fileNamePointer = options.Filename)
+				fixed (byte* patternPointer = options.CssModulesPattern)
+				fixed (byte* inputSourceMap = options.InputSourceMap)
+				fixed (byte* projectRoot = options.ProjectRoot)
+				fixed (byte* active = options.PseudoClasses.Active)
+				fixed (byte* focus = options.PseudoClasses.Focus)
+				fixed (byte* focusVisible = options.PseudoClasses.FocusVisible)
+				fixed (byte* focusWithin = options.PseudoClasses.FocusWithin)
+				fixed (byte* hover = options.PseudoClasses.Hover)
+				fixed (byte** unusedSymbolsP = Fill(options.UnusedSymbols))
 				{
 					CssError** cssError = (CssError**)cssErrorP;
+					var targets = new CsBindgen.Targets
+					{
+						android = options.Targets.Android,
+						chrome = options.Targets.Chrome,
+						edge = options.Targets.Edge,
+						firefox = options.Targets.Firefox,
+						ie = options.Targets.Ie,
+						ios_saf = options.Targets.IosSafari,
+						opera = options.Targets.Opera,
+						safari = options.Targets.Safari,
+						samsung = options.Targets.IosSafari,
+					};
 
-					var wrapper = NativeMethods.lightningcss_stylesheet_parse(sourcePointer, (nuint)source.Length, new()
+					var wrapper = NativeMethods.lightningcss_stylesheet_parse(sourcePointer, (nuint)options.Code.Length, new()
 					{
 						filename = fileNamePointer,
 						css_modules_pattern = patternPointer,
-						nesting = parseOptions.Nesting,
-						custom_media = parseOptions.CustomMedia,
-						css_modules = parseOptions.CssModules,
-						css_modules_dashed_idents = parseOptions.CssModulesDashedIdents,
-						error_recovery = parseOptions.ErrorRecovery,
+						nesting = options.Nesting,
+						custom_media = options.CustomMedia,
+						css_modules = options.CssModules,
+						css_modules_dashed_idents = options.CssModulesDashedIdents,
+						error_recovery = options.ErrorRecovery,
 					}, cssError);
 
 					NativeMethods.lightningcss_stylesheet_transform(wrapper, new()
 					{
-						targets = new()
-						{
-							android = transformOptions.Targets.Android,
-							chrome = transformOptions.Targets.Chrome,
-							edge = transformOptions.Targets.Edge,
-							firefox = transformOptions.Targets.Firefox,
-							ie = transformOptions.Targets.Ie,
-							ios_saf = transformOptions.Targets.IosSafari,
-							opera = transformOptions.Targets.Opera,
-							safari = transformOptions.Targets.Safari,
-							samsung = transformOptions.Targets.IosSafari,
-						},
+						targets = targets,
 						unused_symbols = unusedSymbolsP,
-						unused_symbols_len = (nuint)transformOptions.UnusedSymbols.Length
+						unused_symbols_len = (nuint)options.UnusedSymbols.Length
 					}, cssError);
 
-					var result = NativeMethods.lightningcss_stylesheet_to_css(wrapper, new(), cssError);
+					var result = NativeMethods.lightningcss_stylesheet_to_css(wrapper, new()
+					{
+						input_source_map =  inputSourceMap,
+						input_source_map_len = (nuint)options.InputSourceMap.Length,
+						project_root = projectRoot,
+						source_map =  options.SourceMap,
+						analyze_dependencies = options.AnalyzeDependencies,
+						minify = options.Minify,
+						targets = targets,
+						pseudo_classes = new()
+						{
+							active = active,
+							focus = focus,
+							focus_visible = focusVisible,
+							focus_within = focusWithin,
+							hover = hover,
+						}
+					}, cssError);
 
 					return new()
 					{
@@ -148,8 +173,9 @@ namespace lightningcss
 		}
 	}
 
-	public ref struct ParseOptions
+	public ref struct TransformOptions
 	{
+		public ReadOnlySpan<byte> Code;
 		public ReadOnlySpan<byte> Filename;
 		public bool Nesting;
 		public bool CustomMedia;
@@ -157,6 +183,14 @@ namespace lightningcss
 		public ReadOnlySpan<byte> CssModulesPattern;
 		public bool CssModulesDashedIdents;
 		public bool ErrorRecovery;
+		public Targets Targets;
+		public ReadOnlySpan<byte[]> UnusedSymbols;
+		public bool Minify;
+		public bool SourceMap;
+		public ReadOnlySpan<byte> InputSourceMap;
+		public ReadOnlySpan<byte> ProjectRoot;
+		public bool AnalyzeDependencies;
+		public PseudoClasses PseudoClasses;
 	}
 
 	public record struct ToCssResult
@@ -187,12 +221,6 @@ namespace lightningcss
 		public byte[] Specifier;
 	}
 
-	public ref struct TransformOptions
-	{
-		public Targets Targets;
-		public ReadOnlySpan<byte[]> UnusedSymbols;
-	}
-
 	public record struct Targets
 	{
 		public uint Android;
@@ -206,24 +234,13 @@ namespace lightningcss
 		public uint Samsung;
 	}
 
-	public record struct ToCssOptions
+	public ref struct PseudoClasses
 	{
-		public bool minify;
-		public bool source_map;
-		public byte[] input_source_map;
-		public byte[] project_root;
-		public Targets targets;
-		public bool analyze_dependencies;
-		public PseudoClasses pseudo_classes;
-	}
-
-	public record struct PseudoClasses
-	{
-		public byte[] hover;
-		public byte[] active;
-		public byte[] focus;
-		public byte[] focus_visible;
-		public byte[] focus_within;
+		public ReadOnlySpan<byte> Hover;
+		public ReadOnlySpan<byte> Active;
+		public ReadOnlySpan<byte> Focus;
+		public ReadOnlySpan<byte> FocusVisible;
+		public ReadOnlySpan<byte> FocusWithin;
 	}
 }
 

@@ -4,23 +4,19 @@ try
 {
     var targets = LightningCss.BrowserlistToTargets("last 2 versions, not IE <= 11"u8);
     Console.WriteLine(targets);
-    var result = LightningCss.Transform("""
-    .foo {
-        color: lch(50.998% 135.363 338);
-    }
-    """u8, new()
+    var result = LightningCss.Transform(new()
     {
+        Code = /* language=css */ """
+       .foo {
+           color: lch(50.998% 135.363 338);
+       }
+       """u8,
         Filename = "test.css"u8,
         CssModulesPattern = [],
         CssModules = true,
-        CssModulesDashedIdents = true
-    }, new()
-    {
+        CssModulesDashedIdents = true,
         UnusedSymbols = ["bar"u8.ToArray()],
         Targets = targets
-    }, new ToCssOptions()
-    {
-        targets = targets,
 
     });
     using var cout = Console.OpenStandardOutput();

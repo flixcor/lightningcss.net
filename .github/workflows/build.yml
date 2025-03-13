@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  rust:
     strategy:
       fail-fast: false
       matrix:
@@ -18,8 +18,26 @@ jobs:
           # Mac OS
           - os: macos-latest
             target: x86_64-apple-darwin
-            # strip: strip -x # Must use -x on macOS. This produces larger results on linux.
             binary: liblightningcss_cs_bindings.dylib
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary: liblightningcss_cs_bindings.dylib
+          # Linux
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary: liblightningcss_cs_bindings.so
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            binary: liblightningcss_cs_bindings.so
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
+            binary: liblightningcss_cs_bindings.so
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            binary: liblightningcss_cs_bindings.so
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            binary: liblightningcss_cs_bindings.so
 
     name: build-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
@@ -31,7 +49,7 @@ jobs:
       - name: Setup rust target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Build CLI
+      - name: Build Rust
         working-directory: rust
         run: |
           cargo build --release --target ${{ matrix.target }}
@@ -43,3 +61,4 @@ jobs:
         with:
           name: bindings-${{ matrix.target }}
           path: rust/target/${{ matrix.target }}/release/${{ matrix.binary }}
+  
