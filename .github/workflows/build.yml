@@ -23,22 +23,22 @@ jobs:
             target: aarch64-apple-darwin
             binary: liblightningcss_cs_bindings.dylib
           # Linux
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            binary: liblightningcss_cs_bindings.so
-          - os: 	ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
-            binary: liblightningcss_cs_bindings.so
-          - os: 	ubuntu-24.04-arm
-            target: armv7-unknown-linux-gnueabihf
-            binary: liblightningcss_cs_bindings.so
+          - os:      ubuntu-latest
+            target:  x86_64-unknown-linux-gnu
+            binary:  liblightningcss_cs_bindings.so
+          - os: 	   ubuntu-24.04-arm
+            target:  aarch64-unknown-linux-gnu
+            binary:  liblightningcss_cs_bindings.so
+          - os: 	   ubuntu-24.04-arm
+            target:  armv7-unknown-linux-gnueabihf
+            binary:  liblightningcss_cs_bindings.so
             install: sudo apt-get update && sudo apt-get install gcc-arm-linux-gnueabihf
-          - os: 	ubuntu-24.04-arm
-            target: aarch64-unknown-linux-musl
-            binary: liblightningcss_cs_bindings.so
-          - os:     ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            binary: liblightningcss_cs_bindings.so
+          - os: 	   ubuntu-24.04-arm
+            target:  aarch64-unknown-linux-musl
+            binary:  liblightningcss_cs_bindings.so
+          - os:      ubuntu-latest
+            target:  x86_64-unknown-linux-musl
+            binary:  liblightningcss_cs_bindings.so
 
     name: build-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
