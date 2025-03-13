@@ -65,5 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.target }}
-          path: rust/target/${{ matrix.target }}/release/${{ matrix.binary }}
+          path: | 
+            rust/target/${{ matrix.target }}/release/${{ matrix.binary }}
+            dotnet/NativeMethods.g.cs
   
