@@ -58,14 +58,17 @@ jobs:
         working-directory: rust
         run: |
           cargo build --release --target ${{ matrix.target }}
+      - name: Rename output
+        shell: pwsh
+        run: Move-Item -Path rust/target/${{ matrix.target }}/release/${{ matrix.binary }} -Destination ${{ matrix.binary }}
       # - name: Strip debug symbols # https://github.com/rust-lang/rust/issues/46034
       #   if: ${{ matrix.strip }}
       #   run: ${{ matrix.strip }} *.node ${{ matrix.binary }}
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: bindings-${{ matrix.target }}
-          path: | 
-            rust/target/${{ matrix.target }}/release/${{ matrix.binary }}
+          name: ${{ matrix.target }}
+          path: |
+            ${{ matrix.binary }}
             dotnet/NativeMethods.g.cs
   
