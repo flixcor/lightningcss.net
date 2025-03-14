@@ -1,6 +1,4 @@
 ﻿using CsBindgen;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace lightningcss
 {
@@ -8,7 +6,7 @@ namespace lightningcss
 	{
 		public static Targets BrowserlistToTargets(ReadOnlySpan<byte> browserlist)
 		{
-			CssError[] errors = [];
+			ReadOnlySpan<CssError> errors = [];
 			unsafe
 			{
 				fixed (byte* browserlistP = browserlist)
@@ -35,7 +33,40 @@ namespace lightningcss
 
 		public static ToCssResult Transform(TransformOptions options)
 		{
-			CssError[] errors = [];
+			unsafe
+			{
+				var result = TransformInternal(options);
+				return new()
+				{
+					Code = result.code.GetSpan(),
+					Map = result.map.GetSpan(),
+					Exports = Convert(result.exports, result.exports_len, x => new CssModuleExport
+					{
+						Exported = x.exported.GetMemory(),
+						Local = x.local.GetMemory(),
+						IsReferenced = x.is_referenced,
+						Composes = Convert(x.composes, x.composes_len, y => new CssModuleReference
+						{
+							Name = y.name.GetMemory(),
+							Specifier = y.specifier.GetMemory(),
+						})
+					}),
+					References = Convert(result.references, result.references_len, x => new CssModulePlaceholder
+					{
+						Placeholder = x.placeholder.GetMemory(),
+						Reference = new CssModuleReference
+						{
+							Name = x.reference.name.GetMemory(),
+							Specifier = x.reference.specifier.GetMemory(),
+						}
+					})
+				};
+			}
+		}
+
+		private static CsBindgen.ToCssResult TransformInternal(TransformOptions options)
+		{
+			ReadOnlySpan<CssError> errors = [];
 
 			unsafe
 			{
@@ -84,12 +115,12 @@ namespace lightningcss
 						unused_symbols_len = (nuint)options.UnusedSymbols.Length
 					}, cssError);
 
-					var result = NativeMethods.lightningcss_stylesheet_to_css(wrapper, new()
+					return NativeMethods.lightningcss_stylesheet_to_css(wrapper, new()
 					{
-						input_source_map =  inputSourceMap,
+						input_source_map = inputSourceMap,
 						input_source_map_len = (nuint)options.InputSourceMap.Length,
 						project_root = projectRoot,
-						source_map =  options.SourceMap,
+						source_map = options.SourceMap,
 						analyze_dependencies = options.AnalyzeDependencies,
 						minify = options.Minify,
 						targets = targets,
@@ -102,49 +133,42 @@ namespace lightningcss
 							hover = hover,
 						}
 					}, cssError);
-
-					return new()
-					{
-						Code = ConvertToBytes(result.code),
-						Map = ConvertToBytes(result.map),
-						Exports = Convert(result.exports, result.exports_len, x => new CssModuleExport
-						{
-							Exported = ConvertToBytes(x.exported),
-							Local = ConvertToBytes(x.local),
-							IsReferenced = x.is_referenced,
-							Composes = Convert(x.composes, x.composes_len, y => new CssModuleReference
-							{
-								Name = ConvertToBytes(y.name),
-								Specifier = ConvertToBytes(y.specifier),
-							})
-						}),
-						References = Convert(result.references, result.references_len, x => new CssModulePlaceholder
-						{
-							Placeholder = ConvertToBytes(x.placeholder),
-							Reference = new CssModuleReference
-							{
-								Name = ConvertToBytes(x.reference.name),
-								Specifier = ConvertToBytes(x.reference.specifier),
-							}
-						})
-					};
 				}
 			}
 		}
 
-		private static byte[] ConvertToBytes(RawString rawString)
+		private static ReadOnlySpan<byte> GetSpan(this RawString rawString)
 		{
-			if (rawString.len == 0) return [];
-			var result = new byte[rawString.len];
+			Span<byte> result = new byte[rawString.len];
 			unsafe
 			{
-				for (nuint i = 0; i < rawString.len; i++)
-				{
-					result[i] = rawString.text[i];
-				}
+				Fill(rawString.text, result);
 			}
 			return result;
 		}
+
+		private static ReadOnlyMemory<byte> GetMemory(this RawString rawString)
+		{
+			Memory<byte> result = new byte[rawString.len];
+			unsafe
+			{
+				Fill(rawString.text, result.Span);
+			}
+			return result;
+		}
+
+		private static unsafe void Fill<T>(T* pointer, Span<T> span)
+		{
+			unsafe
+			{
+				for (int i = 0; i < span.Length; i++)
+				{
+					span[i] = pointer[i];
+				}
+			}
+		}
+
+
 
 		private unsafe static O[] Convert<T, O>(T* pointer, nuint length, Func<T, O> map) where T : struct
 		{
@@ -193,32 +217,32 @@ namespace lightningcss
 		public PseudoClasses PseudoClasses;
 	}
 
-	public record struct ToCssResult
+	public ref struct ToCssResult
 	{
-		public byte[] Code;
-		public byte[] Map;
-		public CssModuleExport[] Exports;
-		public CssModulePlaceholder[] References;
+		public ReadOnlySpan<byte> Code;
+		public ReadOnlySpan<byte> Map;
+		public ReadOnlySpan<CssModuleExport> Exports;
+		public ReadOnlySpan<CssModulePlaceholder> References;
 	}
 
 	public record struct CssModuleExport
 	{
-		public byte[] Exported;
-		public byte[] Local;
+		public ReadOnlyMemory<byte> Exported;
+		public ReadOnlyMemory<byte> Local;
 		public bool IsReferenced;
-		public CssModuleReference[] Composes;
+		public ReadOnlyMemory<CssModuleReference> Composes;
 	}
 
 	public record struct CssModulePlaceholder
 	{
-		public byte[] Placeholder;
+		public ReadOnlyMemory<byte> Placeholder;
 		public CssModuleReference Reference;
 	}
 
 	public record struct CssModuleReference
 	{
-		public byte[] Name;
-		public byte[] Specifier;
+		public ReadOnlyMemory<byte> Name;
+		public ReadOnlyMemory<byte> Specifier;
 	}
 
 	public record struct Targets

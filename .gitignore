@@ -400,3 +400,4 @@ FodyWeavers.xsd
 *.sln.iml
 .idea
 /dotnet/runtimes
+/dotnet/lightningcss_cs_bindings.dll

@@ -24,9 +24,9 @@ try
 
     foreach (var item in result.Exports)
     {
-        cout.Write(item.Exported);
+        cout.Write(item.Exported.Span);
         cout.Write("\n"u8);
-        cout.Write(item.Local);
+        cout.Write(item.Local.Span);
         cout.Write("\n"u8);
     }
 }
