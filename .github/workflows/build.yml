@@ -67,12 +67,16 @@ jobs:
         working-directory: rust
         run: |
           cargo build --release --target ${{ matrix.target }}
+
       - name: Create folder
         shell: pwsh
-        run: New-Item -Path native -ItemType Directory
-      - name: Rename output
+        run: New-Item -Path runtimes/${{ matrix.rid }}/native -ItemType Directory
+      - name: Move output
         shell: pwsh
-        run: Move-Item -Path rust/target/${{ matrix.target }}/release/${{ matrix.binary }} -Destination native/${{ matrix.binary }}
+        run: Move-Item -Path rust/target/${{ matrix.target }}/release/${{ matrix.binary }} -Destination runtimes/${{ matrix.rid }}/native/${{ matrix.binary }}
+      - name: Move bindings
+        shell: pwsh
+        run: Move-Item -Path dotnet/NativeMethods.g.cs -Destination NativeMethods.g.cs
       # - name: Strip debug symbols # https://github.com/rust-lang/rust/issues/46034
       #   if: ${{ matrix.strip }}
       #   run: ${{ matrix.strip }} *.node ${{ matrix.binary }}
@@ -81,14 +85,21 @@ jobs:
         with:
           name: ${{ matrix.rid }}
           path: |
-            native/${{ matrix.binary }}
-            dotnet/NativeMethods.g.cs
+            runtimes/${{ matrix.rid }}/native/${{ matrix.binary }}
+            NativeMethods.g.cs
   
 
 
   dotnet:
+    needs: [rust]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v4
+        with:
+          path: dotnet
+          merge-multiple: true
+      - name: Display structure of downloaded files
+        run: ls -R dotnet
       - uses: actions/setup-dotnet@v4
+      
