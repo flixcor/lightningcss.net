@@ -9,21 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../runtimes/$(RuntimeIdentifier)/native/*lightningcss_cs_bindings*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="runtimes/**" Link="runtimes/%(RecursiveDir)/%(Filename)%(Extension)">
+      <PackagePath>runtimes/</PackagePath>
       <Pack>true</Pack>
-      <PackagePath>runtimes\linux-x64\native</PackagePath>
-    </None>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.6.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="..\runtimes\linux-x64\native\">
-      <Link>linux-x64\native</Link>
-    </Folder>
   </ItemGroup>
 
 </Project>
