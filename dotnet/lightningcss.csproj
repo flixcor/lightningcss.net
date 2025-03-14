@@ -9,13 +9,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="../rust/target/debug/liblightningcss_cs_bindings.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="../runtimes/$(RuntimeIdentifier)/native/*lightningcss_cs_bindings*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackagePath>runtimes\linux-x64\native</PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.6.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="..\runtimes\linux-x64\native\">
+      <Link>linux-x64\native</Link>
+    </Folder>
   </ItemGroup>
 
 </Project>
