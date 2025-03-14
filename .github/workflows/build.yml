@@ -100,6 +100,8 @@ jobs:
           path: dotnet
           merge-multiple: true
       - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x.x
       - run: dotnet pack
         working-directory: dotnet
       - name: Upload artifacts
