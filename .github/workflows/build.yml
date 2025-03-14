@@ -104,7 +104,7 @@ jobs:
           dotnet-version: 9.x.x
       - run: dotnet pack -p:PackageVersion=0.0.1-${{ github.sha }}
         working-directory: dotnet
-      - run: dotnet nuget push *.nupkg --api-key "${{ secrets.NUGET_APIKEY }}"
+      - run: dotnet nuget push *.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" -s https://api.nuget.org/v3/index.json
         working-directory: dotnet/bin/Release
       
       
