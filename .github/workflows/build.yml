@@ -12,33 +12,42 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary: lightningcss_cs_bindings.dll
+            rid: win-x64
           - os: windows-latest
             target: aarch64-pc-windows-msvc
             binary: lightningcss_cs_bindings.dll
+            rid: win-arm64
           # Mac OS
           - os: macos-latest
             target: x86_64-apple-darwin
             binary: liblightningcss_cs_bindings.dylib
+            rid: osx-x64
           - os: macos-latest
             target: aarch64-apple-darwin
             binary: liblightningcss_cs_bindings.dylib
+            rid: osx-arm64
           # Linux
           - os:      ubuntu-latest
             target:  x86_64-unknown-linux-gnu
             binary:  liblightningcss_cs_bindings.so
+            rid: linux-x64
           - os: 	   ubuntu-24.04-arm
             target:  aarch64-unknown-linux-gnu
             binary:  liblightningcss_cs_bindings.so
+            rid: linux-arm64
           - os: 	   ubuntu-24.04-arm
             target:  armv7-unknown-linux-gnueabihf
             binary:  liblightningcss_cs_bindings.so
             install: sudo apt-get update && sudo apt-get install gcc-arm-linux-gnueabihf
+            rid: linux-arm
           - os: 	   ubuntu-24.04-arm
             target:  aarch64-unknown-linux-musl
             binary:  liblightningcss_cs_bindings.so
+            rid: linux-musl-arm64
           - os:      ubuntu-latest
             target:  x86_64-unknown-linux-musl
             binary:  liblightningcss_cs_bindings.so
+            rid: linux-musl-x64
 
     name: build-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
@@ -58,18 +67,21 @@ jobs:
         working-directory: rust
         run: |
           cargo build --release --target ${{ matrix.target }}
+      - name: Create folder
+        shell: pwsh
+        run: New-Item -Path native -ItemType Directory
       - name: Rename output
         shell: pwsh
-        run: Move-Item -Path rust/target/${{ matrix.target }}/release/${{ matrix.binary }} -Destination ${{ matrix.binary }}
+        run: Move-Item -Path rust/target/${{ matrix.target }}/release/${{ matrix.binary }} -Destination native/${{ matrix.binary }}
       # - name: Strip debug symbols # https://github.com/rust-lang/rust/issues/46034
       #   if: ${{ matrix.strip }}
       #   run: ${{ matrix.strip }} *.node ${{ matrix.binary }}
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}
+          name: ${{ matrix.rid }}
           path: |
-            ${{ matrix.binary }}
+            native/${{ matrix.binary }}
             dotnet/NativeMethods.g.cs
   
 
